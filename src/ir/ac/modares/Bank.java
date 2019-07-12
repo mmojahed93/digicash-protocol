@@ -77,7 +77,7 @@ public class Bank {
         }
 
         //
-        // Check user account and balance
+        // Check user account exist and it's balance
         //
         BigInteger userBalance = accounts.get(userId);
         if (userBalance == null || userBalance.compareTo(this.moneyOrderAmount) < 0) {
