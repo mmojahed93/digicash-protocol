@@ -1,27 +1,58 @@
 package ir.ac.modares.model;
 
+import java.math.BigInteger;
+
 public class IdentityModel {
-    String hl;
-    String hr;
+    public static class XPair {
 
-    public IdentityModel(String hl, String hr) {
-        this.hl = hl;
-        this.hr = hr;
+        private BigInteger xl;
+        private BigInteger xr;
+
+        public XPair(BigInteger xl, BigInteger xr) {
+            this.xl = xl;
+            this.xr = xr;
+        }
+
+        public BigInteger getXl() {
+            return xl;
+        }
+
+        public BigInteger getXr() {
+            return xr;
+        }
     }
 
-    public String getHl() {
-        return hl;
+    public static class HPair {
+        private BigInteger hl;
+        private BigInteger hr;
+
+        public HPair(BigInteger hl, BigInteger hr) {
+            this.hl = hl;
+            this.hr = hr;
+        }
+
+        public BigInteger getHl() {
+            return hl;
+        }
+
+        public BigInteger getHr() {
+            return hr;
+        }
     }
 
-    public void setHl(String hl) {
-        this.hl = hl;
+    private XPair xPair;
+    private HPair hPair;
+
+    public IdentityModel(XPair xPair, HPair hPair) {
+        this.xPair = xPair;
+        this.hPair = hPair;
     }
 
-    public String getHr() {
-        return hr;
+    public XPair getxPair() {
+        return xPair;
     }
 
-    public void setHr(String hr) {
-        this.hr = hr;
+    public HPair gethPair() {
+        return hPair;
     }
 }

@@ -3,11 +3,12 @@ package ir.ac.modares.model;
 import java.math.BigInteger;
 
 public class MoneyOrderModel {
-    BigInteger amount;
-    String serialId;
-    IdentityModel[] identityList;
+    private BigInteger amount;
+    private String serialId;
+    private IdentityModel.HPair[] identityList;
 
-    public MoneyOrderModel(BigInteger amount, String serialId, IdentityModel[] identityList) {
+
+    public MoneyOrderModel(BigInteger amount, String serialId, IdentityModel.HPair[] identityList) {
         this.amount = amount;
         this.serialId = serialId;
         this.identityList = identityList;
@@ -17,23 +18,11 @@ public class MoneyOrderModel {
         return amount;
     }
 
-    public void setAmount(BigInteger amount) {
-        this.amount = amount;
-    }
-
     public String getSerialId() {
         return serialId;
     }
 
-    public void setSerialId(String serialId) {
-        this.serialId = serialId;
-    }
-
-    public IdentityModel[] getIdentityList() {
+    public IdentityModel.HPair[] getIdentityList() {
         return identityList;
-    }
-
-    public void setIdentityList(IdentityModel[] identityList) {
-        this.identityList = identityList;
     }
 }
