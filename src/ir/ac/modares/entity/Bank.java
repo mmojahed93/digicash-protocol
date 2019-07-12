@@ -1,4 +1,4 @@
-package ir.ac.modares;
+package ir.ac.modares.entity;
 
 import ir.ac.modares.model.IdentityModel;
 import ir.ac.modares.model.MoneyOrderModel;
