@@ -29,7 +29,7 @@ public class User {
             @Override
             public MoneyOrderModel getDecryptedOrderModel(int orderIndex) {
                 try {
-                    return moneyOrderHandler.getMoneyOrderModelAt(orderIndex);
+                    return moneyOrderHandler.getMoneyOrderAt(orderIndex);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -44,7 +44,7 @@ public class User {
 
         try {
             signedMoneyOrder = bank.sign();
-            MoneyOrderModel moneyOrderModel = moneyOrderHandler.getMoneyOrderModelAt(signedMoneyOrder.getIndexOfMoneyOrder());
+            MoneyOrderModel moneyOrderModel = moneyOrderHandler.getMoneyOrderAt(signedMoneyOrder.getIndexOfMoneyOrder());
             System.out.println("Amount: " + moneyOrderModel.getAmount());
             System.out.println("User1 Balance: " + Bank.accounts.get(User.USER_ID_1));
 
