@@ -10,6 +10,8 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import java.math.BigInteger;
 import java.security.*;
+import java.security.spec.RSAPrivateKeySpec;
+import java.security.spec.RSAPublicKeySpec;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
@@ -39,16 +41,35 @@ public class Bank {
     public static HashMap<BigInteger, BigInteger> accounts = new HashMap<>();
 
     public static PublicKey publicKey;
+    public static RSAPublicKeySpec publicKeySpec;
     private static KeyPair keys;
 
     static {
         accounts.put(User.USER_ID_1, new BigInteger("1000000"));
         accounts.put(User.USER_ID_2, new BigInteger("2000000"));
 
+        initKeys();
+    }
+
+    private static void initKeys() {
         try {
-            keys = KeyPairGenerator.getInstance("RSA").generateKeyPair();
+            // Get an instance of the RSA key generator
+            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+            keyPairGenerator.initialize(4096);
+
+            // Generate the KeyPair
+            keys = keyPairGenerator.generateKeyPair();
+
+            // Get the public and private key
             publicKey = keys.getPublic();
-        } catch (NoSuchAlgorithmException e) {
+            PrivateKey privateKey = keys.getPrivate();
+
+            // Get the RSAPublicKeySpec and RSAPrivateKeySpec
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            publicKeySpec = keyFactory.getKeySpec(publicKey, RSAPublicKeySpec.class);
+            RSAPrivateKeySpec privateKeySpec = keyFactory.getKeySpec(privateKey, RSAPrivateKeySpec.class);
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
