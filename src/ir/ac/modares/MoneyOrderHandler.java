@@ -12,25 +12,37 @@ import java.util.Set;
 
 public class MoneyOrderHandler {
 
+    private class OrderCreationResult {
+        MoneyOrderModel moneyOrderModel;
+        IdentityModel[] identities;
+
+        public OrderCreationResult(MoneyOrderModel moneyOrderModel, IdentityModel[] identities) {
+            this.moneyOrderModel = moneyOrderModel;
+            this.identities = identities;
+        }
+
+    }
+
     private final BigInteger secretKey = new BigInteger("15454885155544065937824519745029394769131510805818");
     private final BigInteger upperLimit = new BigInteger("2455155546008943817740293915197451784769108058161191238065");
 
-    private final int generalSize = 100;
-    private MoneyOrderModel[] moneyOrderList = new MoneyOrderModel[generalSize];
-    private BigInteger[] encryptedMoneyOrderList = new BigInteger[generalSize];
+    private final int moneyOrderLen = 100;
+    private final int identityLen = 100;
+
+    private MoneyOrderModel[] moneyOrderList = new MoneyOrderModel[moneyOrderLen];
+    private BigInteger[] encryptedMoneyOrderList = new BigInteger[moneyOrderLen];
 
     private Set<Integer> checkedMoneyOrderIndexes = new HashSet<>();
 
     private BigInteger userId;
     private String amount;
-    private int identityLen = generalSize;
-    private IdentityModel[] identityList;
+
+    private IdentityModel[][] identityList = new IdentityModel[moneyOrderLen][identityLen];
 
 
     public MoneyOrderHandler(String amount, BigInteger userId) {
         this.amount = amount;
         this.userId = userId;
-        this.identityList = new IdentityModel[identityLen];
     }
 
     public MoneyOrderModel[] getMoneyOrderList() {
@@ -43,11 +55,17 @@ public class MoneyOrderHandler {
 
     public void createMoneyOrderList() {
         for (int i = 0; i < moneyOrderList.length; i++) {
-            MoneyOrderModel moneyOrderModel = createMoneyOrder();
-            moneyOrderList[i] = moneyOrderModel;
-            encryptedMoneyOrderList[i] = new BigInteger(serialize(moneyOrderModel)).multiply(secretKey);
+            OrderCreationResult result = createMoneyOrder();
+            moneyOrderList[i] = result.moneyOrderModel;
+            identityList[i] = result.identities;
+            encryptedMoneyOrderList[i] = new BigInteger(serialize(result.moneyOrderModel)).xor(secretKey);
         }
 
+    }
+
+    public MoneyOrderModel decryptMoneyOrder(BigInteger encryptedMoneyOrder){
+        BigInteger a = encryptedMoneyOrder.xor(secretKey);
+        return (MoneyOrderModel) deserialize(a.toByteArray());
     }
 
     public MoneyOrderModel getDecryptedMoneyOrderModel(int index) throws Exception {
@@ -60,10 +78,15 @@ public class MoneyOrderHandler {
         return moneyOrderList[index];
     }
 
-    private MoneyOrderModel createMoneyOrder() {
+    public IdentityModel.XPair getXPair(int orderIndex, int pairIndex) {
+        return identityList[orderIndex][pairIndex].getxPair();
+    }
 
-        IdentityModel.HPair[] hashIdentityList = new IdentityModel.HPair[this.identityLen];
-        for (int i = 0; i < this.identityList.length; i++) {
+    private OrderCreationResult createMoneyOrder() {
+
+        IdentityModel[] iMoneyOrderIdentityList = new IdentityModel[this.identityLen];
+        IdentityModel.HPair[] HIdentityList = new IdentityModel.HPair[this.identityLen];
+        for (int i = 0; i < this.identityLen; i++) {
             BigInteger xl = generateRandomNumber(upperLimit);
             BigInteger xr = xl.xor(this.userId);
 
@@ -72,17 +95,17 @@ public class MoneyOrderHandler {
                     new BigInteger(DigestUtils.sha256(xr.toByteArray())));
 
             IdentityModel identityModel = new IdentityModel(xPair, hPair);
-            this.identityList[i] = identityModel;
-            hashIdentityList[i] = identityModel.gethPair();
+            iMoneyOrderIdentityList[i] = identityModel;
+            HIdentityList[i] = identityModel.gethPair();
         }
 
         MoneyOrderModel moneyOrderModel = new MoneyOrderModel(
                 new BigInteger(this.amount),
                 generateRandomNumber(upperLimit) + "",
-                hashIdentityList
+                HIdentityList
         );
 
-        return moneyOrderModel;
+        return new OrderCreationResult(moneyOrderModel, iMoneyOrderIdentityList);
     }
 
     private BigInteger generateRandomNumber(BigInteger upperLimit) {
