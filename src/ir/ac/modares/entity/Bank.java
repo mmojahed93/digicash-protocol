@@ -17,16 +17,16 @@ import java.util.Random;
 public class Bank {
 
     public static class SignedMoneyOrder {
-        private byte[] moneyOrder;
+        private byte[] encryptedMoneyOrder;
         private byte[] signedOrderMoney;
 
-        public SignedMoneyOrder(byte[] moneyOrder, byte[] signedOrderMoney) {
-            this.moneyOrder = moneyOrder;
+        public SignedMoneyOrder(byte[] encryptedMoneyOrder, byte[] signedOrderMoney) {
+            this.encryptedMoneyOrder = encryptedMoneyOrder;
             this.signedOrderMoney = signedOrderMoney;
         }
 
-        public byte[] getMoneyOrder() {
-            return moneyOrder;
+        public byte[] getEncryptedMoneyOrder() {
+            return encryptedMoneyOrder;
         }
 
         public byte[] getSignedOrderMoney() {
@@ -36,17 +36,27 @@ public class Bank {
 
 
     // user account info (userId, balance)
-    private static HashMap<BigInteger, BigInteger> accounts = new HashMap<>();
+    public static HashMap<BigInteger, BigInteger> accounts = new HashMap<>();
+
+    public static PublicKey publicKey;
+    private static KeyPair keys;
 
     static {
         accounts.put(User.USER_ID_1, new BigInteger("1000000"));
         accounts.put(User.USER_ID_2, new BigInteger("2000000"));
+
+        try {
+            keys = KeyPairGenerator.getInstance("RSA").generateKeyPair();
+            publicKey = keys.getPublic();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
     }
 
     public interface CheckMoneyDelegate {
-        public MoneyOrderModel getDecryptedOrderModel(int orderIndex);
+        MoneyOrderModel getDecryptedOrderModel(int orderIndex);
 
-        public IdentityModel.XPair getXPair(int orderIndex, int pairIndex);
+        IdentityModel.XPair getXPair(int orderIndex, int pairIndex);
     }
 
     private BigInteger[] encryptedMoneyOrderList;
@@ -57,26 +67,10 @@ public class Bank {
 
     private ArrayList<Integer> possibleIndexes;
 
-    private KeyPair keys;
-
-
     public Bank(BigInteger[] encryptedMoneyOrderList, CheckMoneyDelegate checkMoneyOrderDelegate) {
         this.encryptedMoneyOrderList = encryptedMoneyOrderList;
         this.checkMoneyOrderDelegate = checkMoneyOrderDelegate;
 
-        initKey();
-    }
-
-    public PublicKey getPublicKey() {
-        return keys.getPublic();
-    }
-
-    private void initKey() {
-        try {
-            keys = KeyPairGenerator.getInstance("RSA").generateKeyPair();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
     }
 
     public SignedMoneyOrder sign() throws Exception {
@@ -100,15 +94,15 @@ public class Bank {
             return null;
         }
 
-        BigInteger finalMoneyOrder = encryptedMoneyOrderList[possibleIndexes.get(0)];
+        BigInteger encryptedMoneyOrder = encryptedMoneyOrderList[possibleIndexes.get(0)];
 
 
         try {
             Cipher cipher = Cipher.getInstance("RSA");
             cipher.init(Cipher.ENCRYPT_MODE, keys.getPrivate());
-            byte[] finalMoneyOrderByteArr = finalMoneyOrder.toByteArray();
-            byte[] signedMoneyOrder = cipher.doFinal(DigestUtils.sha256(finalMoneyOrderByteArr));
-            SignedMoneyOrder signedMoneyOrderResult = new SignedMoneyOrder(finalMoneyOrderByteArr, signedMoneyOrder);
+            byte[] encryptedMoneyOrderByteArr = encryptedMoneyOrder.toByteArray();
+            byte[] signedMoneyOrder = cipher.doFinal(DigestUtils.sha256(encryptedMoneyOrderByteArr));
+            SignedMoneyOrder signedMoneyOrderResult = new SignedMoneyOrder(encryptedMoneyOrderByteArr, signedMoneyOrder);
 
             //
             // Update user balance
