@@ -11,12 +11,18 @@ import javax.crypto.NoSuchPaddingException;
 import java.math.BigInteger;
 import java.security.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Random;
 
 public class Bank {
 
-    static {
 
+    // user account info (userId, balance)
+    private static HashMap<BigInteger, BigInteger> accounts = new HashMap<>();
+
+    static {
+        accounts.put(User.USER_ID_1, new BigInteger("1000000"));
+        accounts.put(User.USER_ID_2, new BigInteger("2000000"));
     }
 
     public interface CheckMoneyDelegate {
@@ -27,6 +33,9 @@ public class Bank {
 
     private BigInteger[] encryptedMoneyOrderList;
     private CheckMoneyDelegate checkMoneyOrderDelegate;
+
+    private BigInteger moneyOrderAmount;
+    private BigInteger userId;
 
     private ArrayList<Integer> possibleIndexes;
 
@@ -67,6 +76,14 @@ public class Bank {
             throw new Exception("Something is wrong!");
         }
 
+        //
+        // Check user account and balance
+        //
+        BigInteger userBalance = accounts.get(userId);
+        if (userBalance == null || userBalance.compareTo(this.moneyOrderAmount) < 0) {
+            return null;
+        }
+
         BigInteger finalMoneyOrder = encryptedMoneyOrderList[possibleIndexes.get(0)];
 
 
@@ -85,6 +102,12 @@ public class Bank {
             e.printStackTrace();
         }
 
+        //
+        // Update user balance
+        //
+        BigInteger newBalance = userBalance.subtract(this.moneyOrderAmount);
+        accounts.put(this.userId, newBalance);
+
         return signedMoneyOrder;
 
     }
@@ -96,8 +119,8 @@ public class Bank {
             possibleIndexes.add(i);
         }
 
-        BigInteger amount = null;
-        BigInteger userId = null;
+        this.moneyOrderAmount = null;
+        this.userId = null;
 
         //
         // Check for all order_len - 1 (until size of possibleIndexes makes 1)
@@ -111,14 +134,14 @@ public class Bank {
             MoneyOrderModel decryptedOrderModel = checkMoneyOrderDelegate.getDecryptedOrderModel(randomIndex);
 
             BigInteger orderAmount = decryptedOrderModel.getAmount();
-            if (amount == null) {
-                amount = orderAmount;
+            if (moneyOrderAmount == null) {
+                moneyOrderAmount = orderAmount;
             }
 
             //
             // Check all amount is same
             //
-            if (!amount.equals(orderAmount)) {
+            if (!moneyOrderAmount.equals(orderAmount)) {
                 return false;
             }
 
