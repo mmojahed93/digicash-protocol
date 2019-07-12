@@ -4,10 +4,6 @@ import ir.ac.modares.model.IdentityModel;
 import ir.ac.modares.model.MoneyOrderModel;
 import org.apache.commons.codec.digest.DigestUtils;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import java.math.BigInteger;
 import java.security.*;
 import java.security.spec.RSAPrivateKeySpec;
@@ -19,20 +15,20 @@ import java.util.Random;
 public class Bank {
 
     public static class SignedMoneyOrder {
-        private byte[] encryptedMoneyOrder;
-        private byte[] signedOrderMoney;
+        private int indexOfMoneyOrder;
+        private BigInteger signedMoneyOrder;
 
-        public SignedMoneyOrder(byte[] encryptedMoneyOrder, byte[] signedOrderMoney) {
-            this.encryptedMoneyOrder = encryptedMoneyOrder;
-            this.signedOrderMoney = signedOrderMoney;
+        public SignedMoneyOrder(int indexOfMoneyOrder, BigInteger signedMoneyOrder) {
+            this.indexOfMoneyOrder = indexOfMoneyOrder;
+            this.signedMoneyOrder = signedMoneyOrder;
         }
 
-        public byte[] getEncryptedMoneyOrder() {
-            return encryptedMoneyOrder;
+        public int getIndexOfMoneyOrder() {
+            return indexOfMoneyOrder;
         }
 
-        public byte[] getSignedOrderMoney() {
-            return signedOrderMoney;
+        public BigInteger getSignedMoneyOrder() {
+            return signedMoneyOrder;
         }
     }
 
@@ -42,6 +38,7 @@ public class Bank {
 
     public static PublicKey publicKey;
     public static RSAPublicKeySpec publicKeySpec;
+    public static RSAPrivateKeySpec privateKeySpec;
     private static KeyPair keys;
 
     static {
@@ -67,7 +64,7 @@ public class Bank {
             // Get the RSAPublicKeySpec and RSAPrivateKeySpec
             KeyFactory keyFactory = KeyFactory.getInstance("RSA");
             publicKeySpec = keyFactory.getKeySpec(publicKey, RSAPublicKeySpec.class);
-            RSAPrivateKeySpec privateKeySpec = keyFactory.getKeySpec(privateKey, RSAPrivateKeySpec.class);
+            privateKeySpec = keyFactory.getKeySpec(privateKey, RSAPrivateKeySpec.class);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -115,34 +112,19 @@ public class Bank {
             return null;
         }
 
-        BigInteger encryptedMoneyOrder = encryptedMoneyOrderList[possibleIndexes.get(0)];
+        int moneyOrderIndex = possibleIndexes.get(0);
+        BigInteger encryptedMoneyOrder = encryptedMoneyOrderList[moneyOrderIndex];
+        BigInteger signedMoneyOrder = encryptedMoneyOrder.modPow(privateKeySpec.getPrivateExponent(), privateKeySpec.getModulus());
 
 
-        try {
-            Cipher cipher = Cipher.getInstance("RSA");
-            cipher.init(Cipher.ENCRYPT_MODE, keys.getPrivate());
-            byte[] encryptedMoneyOrderByteArr = encryptedMoneyOrder.toByteArray();
-            byte[] signedMoneyOrder = cipher.doFinal(DigestUtils.sha256(encryptedMoneyOrderByteArr));
-            SignedMoneyOrder signedMoneyOrderResult = new SignedMoneyOrder(encryptedMoneyOrderByteArr, signedMoneyOrder);
+        //
+        // Update user balance
+        //
+        BigInteger newBalance = userBalance.subtract(this.moneyOrderAmount);
+        accounts.put(this.userId, newBalance);
 
-            //
-            // Update user balance
-            //
-            BigInteger newBalance = userBalance.subtract(this.moneyOrderAmount);
-            accounts.put(this.userId, newBalance);
+        return new SignedMoneyOrder(moneyOrderIndex, signedMoneyOrder);
 
-            return signedMoneyOrderResult;
-
-        } catch (NoSuchAlgorithmException
-                | NoSuchPaddingException
-                | InvalidKeyException
-                | IllegalBlockSizeException
-                | BadPaddingException e) {
-
-            e.printStackTrace();
-        }
-
-        return null;
     }
 
     private boolean checkMoneyOrderList() {
