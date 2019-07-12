@@ -38,7 +38,7 @@ public class Bank {
 
     public static PublicKey publicKey;
     public static RSAPublicKeySpec publicKeySpec;
-    public static RSAPrivateKeySpec privateKeySpec;
+    private static RSAPrivateKeySpec privateKeySpec;
     private static KeyPair keys;
 
     static {
