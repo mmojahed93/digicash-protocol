@@ -16,6 +16,24 @@ import java.util.Random;
 
 public class Bank {
 
+    public static class SignedMoneyOrder {
+        private byte[] moneyOrder;
+        private byte[] signedOrderMoney;
+
+        public SignedMoneyOrder(byte[] moneyOrder, byte[] signedOrderMoney) {
+            this.moneyOrder = moneyOrder;
+            this.signedOrderMoney = signedOrderMoney;
+        }
+
+        public byte[] getMoneyOrder() {
+            return moneyOrder;
+        }
+
+        public byte[] getSignedOrderMoney() {
+            return signedOrderMoney;
+        }
+    }
+
 
     // user account info (userId, balance)
     private static HashMap<BigInteger, BigInteger> accounts = new HashMap<>();
@@ -26,9 +44,9 @@ public class Bank {
     }
 
     public interface CheckMoneyDelegate {
-        public MoneyOrderModel getDecryptedOrderModel(int index);
+        public MoneyOrderModel getDecryptedOrderModel(int orderIndex);
 
-        public IdentityModel.XPair getRealPair(int index);
+        public IdentityModel.XPair getXPair(int orderIndex, int pairIndex);
     }
 
     private BigInteger[] encryptedMoneyOrderList;
@@ -61,12 +79,10 @@ public class Bank {
         }
     }
 
-    public byte[] sign() throws Exception {
-        byte[] signedMoneyOrder = null;
-
+    public SignedMoneyOrder sign() throws Exception {
         boolean check = checkMoneyOrderList();
         if (!check) {
-            return signedMoneyOrder;
+            return null;
         }
 
         //
@@ -90,8 +106,17 @@ public class Bank {
         try {
             Cipher cipher = Cipher.getInstance("RSA");
             cipher.init(Cipher.ENCRYPT_MODE, keys.getPrivate());
-            signedMoneyOrder = cipher.doFinal(finalMoneyOrder.toByteArray());
+            byte[] finalMoneyOrderByteArr = finalMoneyOrder.toByteArray();
+            byte[] signedMoneyOrder = cipher.doFinal(DigestUtils.sha256(finalMoneyOrderByteArr));
+            SignedMoneyOrder signedMoneyOrderResult = new SignedMoneyOrder(finalMoneyOrderByteArr, signedMoneyOrder);
 
+            //
+            // Update user balance
+            //
+            BigInteger newBalance = userBalance.subtract(this.moneyOrderAmount);
+            accounts.put(this.userId, newBalance);
+
+            return signedMoneyOrderResult;
 
         } catch (NoSuchAlgorithmException
                 | NoSuchPaddingException
@@ -102,14 +127,7 @@ public class Bank {
             e.printStackTrace();
         }
 
-        //
-        // Update user balance
-        //
-        BigInteger newBalance = userBalance.subtract(this.moneyOrderAmount);
-        accounts.put(this.userId, newBalance);
-
-        return signedMoneyOrder;
-
+        return null;
     }
 
     private boolean checkMoneyOrderList() {
@@ -122,16 +140,20 @@ public class Bank {
         this.moneyOrderAmount = null;
         this.userId = null;
 
+        Random random = new Random();
         //
         // Check for all order_len - 1 (until size of possibleIndexes makes 1)
         //
         while (possibleIndexes.size() != 1) {
 
             int upperRandomLimit = possibleIndexes.size();
-            int randomIndex = possibleIndexes.get(new Random(upperRandomLimit).nextInt());
-            possibleIndexes.remove(randomIndex);
+            int randomOrderIndex = possibleIndexes.get(random.nextInt(upperRandomLimit));
+            possibleIndexes.removeIf(s -> s.equals(randomOrderIndex));
 
-            MoneyOrderModel decryptedOrderModel = checkMoneyOrderDelegate.getDecryptedOrderModel(randomIndex);
+            MoneyOrderModel decryptedOrderModel = checkMoneyOrderDelegate.getDecryptedOrderModel(randomOrderIndex);
+            if (decryptedOrderModel == null) {
+                return false;
+            }
 
             BigInteger orderAmount = decryptedOrderModel.getAmount();
             if (moneyOrderAmount == null) {
@@ -151,7 +173,7 @@ public class Bank {
             IdentityModel.HPair[] hPairs = decryptedOrderModel.getIdentityList();
             for (int i = 0; i < hPairs.length; i++) {
                 IdentityModel.HPair hPair = hPairs[i];
-                IdentityModel.XPair xPair = checkMoneyOrderDelegate.getRealPair(i);
+                IdentityModel.XPair xPair = checkMoneyOrderDelegate.getXPair(randomOrderIndex, i);
 
                 //
                 // Check money order HPair with corresponding hash of xPair
