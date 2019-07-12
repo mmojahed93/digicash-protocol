@@ -1,5 +1,6 @@
 package ir.ac.modares.model;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 
 public class IdentityModel {
@@ -22,7 +23,7 @@ public class IdentityModel {
         }
     }
 
-    public static class HPair {
+    public static class HPair implements Serializable {
         private BigInteger hl;
         private BigInteger hr;
 

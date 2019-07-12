@@ -1,8 +1,9 @@
 package ir.ac.modares.model;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 
-public class MoneyOrderModel {
+public class MoneyOrderModel implements Serializable {
     private BigInteger amount;
     private String serialId;
     private IdentityModel.HPair[] identityList;
