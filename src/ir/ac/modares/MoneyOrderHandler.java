@@ -24,7 +24,6 @@ public class MoneyOrderHandler {
 
     }
 
-    private final BigInteger secretKey = new BigInteger("15454885155544065937824519745029394769131510805818");
     private final BigInteger upperLimit = new BigInteger("2455155546008943817740293915197451784769108058161191238065");
 
     private final int moneyOrderLen = 100;
@@ -37,13 +36,15 @@ public class MoneyOrderHandler {
 
     private BigInteger userId;
     private String amount;
+    private BigInteger secretKey;
 
     private IdentityModel[][] identityList = new IdentityModel[moneyOrderLen][identityLen];
 
 
-    public MoneyOrderHandler(String amount, BigInteger userId) {
+    public MoneyOrderHandler(String amount, BigInteger userId, BigInteger secretKey) {
         this.amount = amount;
         this.userId = userId;
+        this.secretKey = secretKey;
     }
 
     public MoneyOrderModel[] getMoneyOrderList() {
@@ -63,6 +64,7 @@ public class MoneyOrderHandler {
             identityList[i] = result.identities;
 
             byte[] moneyOrderDigest = DigestUtils.sha256(serialize(result.moneyOrderModel));
+            // Make money order blind
             encryptedMoneyOrderList[i] = new BigInteger(moneyOrderDigest).multiply(blindFactor);
         }
 
@@ -76,6 +78,10 @@ public class MoneyOrderHandler {
             throw new Exception("Request limitation!");
         }
         return moneyOrderList[index];
+    }
+
+    public IdentityModel[] getIdentityList(int orderIndex) {
+        return identityList[orderIndex];
     }
 
     public IdentityModel.XPair getXPair(int orderIndex, int pairIndex) {
