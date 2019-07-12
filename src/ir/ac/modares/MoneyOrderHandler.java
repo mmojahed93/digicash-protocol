@@ -1,5 +1,6 @@
 package ir.ac.modares;
 
+import ir.ac.modares.entity.Bank;
 import ir.ac.modares.model.IdentityModel;
 import ir.ac.modares.model.MoneyOrderModel;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -54,21 +55,20 @@ public class MoneyOrderHandler {
     }
 
     public void createMoneyOrderList() {
+
+        BigInteger blindFactor = secretKey.modPow(Bank.publicKeySpec.getPublicExponent(), Bank.publicKeySpec.getModulus());
         for (int i = 0; i < moneyOrderList.length; i++) {
             OrderCreationResult result = createMoneyOrder();
             moneyOrderList[i] = result.moneyOrderModel;
             identityList[i] = result.identities;
-            encryptedMoneyOrderList[i] = new BigInteger(serialize(result.moneyOrderModel)).xor(secretKey);
+
+            byte[] moneyOrderDigest = DigestUtils.sha256(serialize(result.moneyOrderModel));
+            encryptedMoneyOrderList[i] = new BigInteger(moneyOrderDigest).multiply(blindFactor);
         }
 
     }
 
-    public MoneyOrderModel decryptMoneyOrder(BigInteger encryptedMoneyOrder){
-        BigInteger a = encryptedMoneyOrder.xor(secretKey);
-        return (MoneyOrderModel) deserialize(a.toByteArray());
-    }
-
-    public MoneyOrderModel getDecryptedMoneyOrderModel(int index) throws Exception {
+    public MoneyOrderModel getMoneyOrderAt(int index) throws Exception {
         if (index < 0 || index >= moneyOrderList.length) {
             throw new Exception("Index out of range!");
         }
