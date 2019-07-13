@@ -85,10 +85,15 @@ public class Bank {
 
     private ArrayList<Integer> possibleIndexes;
 
-    public Bank(BigInteger[] encryptedMoneyOrderList, CheckMoneyDelegate checkMoneyOrderDelegate) {
-        this.encryptedMoneyOrderList = encryptedMoneyOrderList;
-        this.checkMoneyOrderDelegate = checkMoneyOrderDelegate;
+    public Bank() {
+    }
 
+    public void setEncryptedMoneyOrderList(BigInteger[] encryptedMoneyOrderList) {
+        this.encryptedMoneyOrderList = encryptedMoneyOrderList;
+    }
+
+    public void setCheckMoneyOrderDelegate(CheckMoneyDelegate checkMoneyOrderDelegate) {
+        this.checkMoneyOrderDelegate = checkMoneyOrderDelegate;
     }
 
     public SignedMoneyOrder sign() throws Exception {

@@ -41,7 +41,9 @@ public class User {
 
         moneyOrderHandler.createMoneyOrderList();
 
-        Bank bank = new Bank(moneyOrderHandler.getEncryptedMoneyOrderList(), new Bank.CheckMoneyDelegate() {
+        Bank bank = new Bank();
+        bank.setEncryptedMoneyOrderList(moneyOrderHandler.getEncryptedMoneyOrderList());
+        bank.setCheckMoneyOrderDelegate(new Bank.CheckMoneyDelegate() {
             @Override
             public MoneyOrderModel getDecryptedOrderModel(int orderIndex) {
                 try {
