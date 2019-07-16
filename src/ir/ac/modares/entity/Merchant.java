@@ -89,4 +89,9 @@ public class Merchant {
         return true;
     }
 
+    public void spendMoneyOrder(){
+        Bank bank = new Bank();
+
+    }
+
 }

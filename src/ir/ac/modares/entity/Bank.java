@@ -3,6 +3,7 @@ package ir.ac.modares.entity;
 import ir.ac.modares.MoneyOrderHandler;
 import ir.ac.modares.model.IdentityModel;
 import ir.ac.modares.model.MoneyOrderModel;
+import ir.ac.modares.model.UserModel;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import java.math.BigInteger;
@@ -53,7 +54,7 @@ public class Bank {
 
 
     // user account info (userId, balance)
-    public static HashMap<BigInteger, BigInteger> accounts = new HashMap<>();
+    public static HashMap<BigInteger, UserModel> accounts = new HashMap<>();
 
     // Deposited Money Order (coinSerialId, depositedMoneyOrder)
     public static HashMap<String, DepositedMoneyOrder> depositedMoneyOrders = new HashMap<>();
@@ -64,8 +65,9 @@ public class Bank {
     private static KeyPair keys;
 
     static {
-        accounts.put(User.USER_ID_1, new BigInteger("1000000"));
-        accounts.put(User.USER_ID_2, new BigInteger("2000000"));
+        accounts.put(User.USER_ID_1, new UserModel(User.USER_ID_1, "Saber", "Eskandari", "s_eskandari", new BigInteger("1000000")));
+        accounts.put(User.USER_ID_2, new UserModel(User.USER_ID_2, "Mohammad Mahdi", "Mojahed", "mmjahed93", new BigInteger("2000000")));
+        accounts.put(User.USER_ID_3, new UserModel(User.USER_ID_3, "Ali", "Nazari", "ali_nazari", new BigInteger("3000000")));
 
         initKeys();
     }
@@ -137,7 +139,8 @@ public class Bank {
         //
         // Check user account exist and it's balance
         //
-        BigInteger userBalance = accounts.get(userId);
+        UserModel userModel = accounts.get(userId);
+        BigInteger userBalance = userModel.getBalance();
         if (userBalance == null || userBalance.compareTo(this.moneyOrderAmount) < 0) {
             return null;
         }
@@ -151,7 +154,8 @@ public class Bank {
         // Update user balance
         //
         BigInteger newBalance = userBalance.subtract(this.moneyOrderAmount);
-        accounts.put(this.userId, newBalance);
+        userModel.setBalance(newBalance);
+        accounts.put(this.userId, userModel);
 
         return new SignedMoneyOrder(moneyOrderIndex, signedMoneyOrder);
 
@@ -246,17 +250,19 @@ public class Bank {
             return false;
         }
 
-        BigInteger balance = accounts.get(userId);
+        UserModel userModel = accounts.get(userId);
+        BigInteger balance = userModel.getBalance();
         if (balance.equals(BigInteger.ZERO)) {
             balance = BigInteger.valueOf(0);
         }
         BigInteger newBalance = balance.add(moneyOrder.getAmount());
+        userModel.setBalance(newBalance);
 
         // Add money to deposited list
         depositedMoneyOrders.put(moneyOrder.getSerialId(), new DepositedMoneyOrder(moneyOrder, identityHalveList));
 
         // Update merchant balance
-        accounts.put(userId, newBalance);
+        accounts.put(userId, userModel);
 
         return true;
     }
