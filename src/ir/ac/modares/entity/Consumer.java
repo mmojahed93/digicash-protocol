@@ -21,12 +21,11 @@ public class Consumer {
 
     private UserModel consumerUser;
 
-    public Consumer(UserModel consumerUser, String amount) {
+    public Consumer(UserModel consumerUser) {
 
         this.consumerUser = consumerUser;
         secretKey = findGcdOne(Bank.publicKeySpec.getModulus());
         inverseOfSecretKey = secretKey.modPow(BigInteger.valueOf(-1), Bank.publicKeySpec.getModulus());
-        moneyOrderHandler = new MoneyOrderHandler(amount, consumerUser.getId(), secretKey);
     }
 
     public MoneyOrderModel getMoneyOrder() {
@@ -37,8 +36,8 @@ public class Consumer {
         return signedMoneyOrder;
     }
 
-    public void createSignedMoneyOrder() {
-
+    public void createSignedMoneyOrder(String amount) {
+        moneyOrderHandler = new MoneyOrderHandler(amount, consumerUser.getId(), secretKey);
         moneyOrderHandler.createMoneyOrderList();
 
         Bank bank = new Bank();
