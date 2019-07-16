@@ -9,8 +9,9 @@ import java.util.Random;
 
 public class User {
 
-    public static final BigInteger USER_ID_1 = new BigInteger("1");
-    public static final BigInteger USER_ID_2 = new BigInteger("2");
+    public static final BigInteger USER_ID_1 = BigInteger.valueOf(1);
+    public static final BigInteger USER_ID_2 = BigInteger.valueOf(2);
+    public static final BigInteger USER_ID_3 = BigInteger.valueOf(3);
 
     private BigInteger secretKey;
     private BigInteger inverseOfSecretKey;
@@ -69,7 +70,7 @@ public class User {
             this.signedMoneyOrder = signedMoneyOrderObj.getSignedMoneyOrder().multiply(inverseOfSecretKey);
 
             System.out.println("Amount: " + this.moneyOrder.getAmount());
-            System.out.println("User1 Balance: " + Bank.accounts.get(User.USER_ID_1));
+            System.out.println("User1 Balance: " + Bank.accounts.get(User.USER_ID_1).getBalance());
 
         } catch (Exception e) {
             e.printStackTrace();
