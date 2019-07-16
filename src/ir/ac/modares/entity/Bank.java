@@ -1,5 +1,6 @@
 package ir.ac.modares.entity;
 
+import ir.ac.modares.MoneyOrderHandler;
 import ir.ac.modares.model.IdentityModel;
 import ir.ac.modares.model.MoneyOrderModel;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -13,6 +14,24 @@ import java.util.HashMap;
 import java.util.Random;
 
 public class Bank {
+    private static class DepositedMoneyOrder {
+        private MoneyOrderModel moneyOrder;
+        private BigInteger[] identityHalveList;
+
+        public DepositedMoneyOrder(MoneyOrderModel moneyOrder, BigInteger[] identityHalveList) {
+            this.moneyOrder = moneyOrder;
+            this.identityHalveList = identityHalveList;
+        }
+
+        public MoneyOrderModel getMoneyOrder() {
+            return moneyOrder;
+        }
+
+        public BigInteger[] getIdentityHalveList() {
+            return identityHalveList;
+        }
+    }
+
 
     public static class SignedMoneyOrder {
         private int indexOfMoneyOrder;
@@ -35,6 +54,9 @@ public class Bank {
 
     // user account info (userId, balance)
     public static HashMap<BigInteger, BigInteger> accounts = new HashMap<>();
+
+    // Deposited Money Order (coinSerialId, depositedMoneyOrder)
+    public static HashMap<String, DepositedMoneyOrder> depositedMoneyOrders = new HashMap<>();
 
     public static PublicKey publicKey;
     public static RSAPublicKeySpec publicKeySpec;
@@ -96,6 +118,9 @@ public class Bank {
         this.checkMoneyOrderDelegate = checkMoneyOrderDelegate;
     }
 
+    ////////////////////////////
+    // Sign user money order
+    ////////////////////////////
     public SignedMoneyOrder sign() throws Exception {
         boolean check = checkMoneyOrderList();
         if (!check) {
@@ -202,6 +227,65 @@ public class Bank {
         }
 
         return true;
+    }
+
+    ////////////////////////////
+    // Deposit merchant money
+    ////////////////////////////
+    public boolean deposit(BigInteger userId, BigInteger signedMoneyOrder, MoneyOrderModel moneyOrder, BigInteger[] identityHalveList) {
+
+        if (checkMoneyOrderSignature(signedMoneyOrder, moneyOrder)) {
+            System.out.println("Signature validation failed!");
+            return false;
+        }
+
+        String orderSerialId = moneyOrder.getSerialId();
+        if (depositedMoneyOrders.containsKey(orderSerialId)) {
+            EntityEnum cheater = findCheater(moneyOrder, identityHalveList);
+            System.out.println("Money order has been spend! Cheater is: " + cheater);
+            return false;
+        }
+
+        BigInteger balance = accounts.get(userId);
+        if (balance.equals(BigInteger.ZERO)) {
+            balance = BigInteger.valueOf(0);
+        }
+        BigInteger newBalance = balance.add(moneyOrder.getAmount());
+
+        // Add money to deposited list
+        depositedMoneyOrders.put(moneyOrder.getSerialId(), new DepositedMoneyOrder(moneyOrder, identityHalveList));
+
+        // Update merchant balance
+        accounts.put(userId, newBalance);
+
+        return true;
+    }
+
+    private boolean checkMoneyOrderSignature(BigInteger signedMoneyOrder, MoneyOrderModel moneyOrder) {
+
+        // Fixme check
+        BigInteger designed = signedMoneyOrder.modPow(publicKeySpec.getPublicExponent(), publicKeySpec.getModulus());
+        BigInteger moneyOrderDigest = new BigInteger(DigestUtils.sha256(MoneyOrderHandler.serialize(moneyOrder)));
+        return designed.equals(moneyOrderDigest);
+
+    }
+
+    private EntityEnum findCheater(MoneyOrderModel newMoneyOrder, BigInteger[] newIdentityHalveList) {
+        DepositedMoneyOrder depositedMoneyOrder = depositedMoneyOrders.get(newMoneyOrder.getSerialId());
+        if (depositedMoneyOrder == null) {
+            return EntityEnum.NONE;
+        }
+
+        BigInteger[] oldIdentityHalveList = depositedMoneyOrder.getIdentityHalveList();
+
+        for (int i = 0; i < oldIdentityHalveList.length; i++) {
+            if (!oldIdentityHalveList[i].equals(newIdentityHalveList[i])) {
+                // todo find user id
+                return EntityEnum.USER;
+            }
+        }
+
+        return EntityEnum.MERCHANT;
     }
 
 }
