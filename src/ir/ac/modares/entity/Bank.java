@@ -298,7 +298,7 @@ public class Bank {
         if (depositedMoneyOrders.containsKey(orderSerialId)) {
             UserModel cheater = findCheater(merchantId, moneyOrder, identityHalveList);
             if (cheater != null) {
-                System.out.println("[deposit] Money order has been spend! Cheater name: " +
+                System.out.println("[deposit] Money order has been spend! UserType: " + cheater.getUserType() + " Cheater name: " +
                         cheater.getFirstName() + " " + cheater.getLastName() +
                         " username: " + cheater.getUsername());
             }
