@@ -53,11 +53,11 @@ public class Bank {
     }
 
 
-    // user account info (userId, balance)
-    public static HashMap<BigInteger, UserModel> accounts = new HashMap<>();
+    // user account info (userId, userModel)
+    private static HashMap<BigInteger, UserModel> accounts = new HashMap<>();
 
     // Deposited Money Order (coinSerialId, depositedMoneyOrder)
-    public static HashMap<String, DepositedMoneyOrder> depositedMoneyOrders = new HashMap<>();
+    private static HashMap<String, DepositedMoneyOrder> depositedMoneyOrders = new HashMap<>();
 
     public static PublicKey publicKey;
     public static RSAPublicKeySpec publicKeySpec;
@@ -65,10 +65,6 @@ public class Bank {
     private static KeyPair keys;
 
     static {
-        accounts.put(Consumer.USER_ID_1, new UserModel(Consumer.USER_ID_1, "Saber", "Eskandari", "s_eskandari", new BigInteger("1000000"), EntityEnum.USER));
-        accounts.put(Consumer.USER_ID_2, new UserModel(Consumer.USER_ID_2, "Mohammad Mahdi", "Mojahed", "mmjahed93", new BigInteger("2000000"), EntityEnum.USER));
-        accounts.put(Consumer.USER_ID_3, new UserModel(Consumer.USER_ID_3, "Ali", "Nazari", "ali_nazari", new BigInteger("3000000"), EntityEnum.MERCHANT));
-
         initKeys();
     }
 
@@ -93,6 +89,14 @@ public class Bank {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static void addUser(UserModel userModel) {
+        if (accounts.get(userModel.getId()) != null) {
+            System.out.println("User id exist!");
+            return;
+        }
+        accounts.put(userModel.getId(), userModel);
     }
 
     public interface CheckMoneyDelegate {
@@ -237,6 +241,15 @@ public class Bank {
     // Deposit merchant money
     ////////////////////////////
     public boolean deposit(BigInteger merchantId, BigInteger signedMoneyOrder, MoneyOrderModel moneyOrder, BigInteger[] identityHalveList) {
+        UserModel merchantUser = accounts.get(merchantId);
+        if (merchantUser == null) {
+            System.out.println("Merchant user not found!");
+            return false;
+        }
+        if (merchantUser.getUserType() != EntityEnum.MERCHANT) {
+            System.out.println("User is not merchant!");
+            return false;
+        }
 
         if (checkMoneyOrderSignature(signedMoneyOrder, moneyOrder)) {
             System.out.println("Signature validation failed!");
@@ -247,7 +260,7 @@ public class Bank {
         if (depositedMoneyOrders.containsKey(orderSerialId)) {
             UserModel cheater = findCheater(merchantId, moneyOrder, identityHalveList);
             if (cheater != null) {
-                System.out.println("Money order has been spend! Cheater name: " +
+                System.out.println("[deposit] Money order has been spend! Cheater name: " +
                         cheater.getFirstName() + " " + cheater.getLastName() +
                         " username: " + cheater.getUsername());
             }
@@ -255,19 +268,20 @@ public class Bank {
             return false;
         }
 
-        UserModel userModel = accounts.get(merchantId);
-        BigInteger balance = userModel.getBalance();
+        BigInteger balance = merchantUser.getBalance();
         if (balance.equals(BigInteger.ZERO)) {
             balance = BigInteger.valueOf(0);
         }
         BigInteger newBalance = balance.add(moneyOrder.getAmount());
-        userModel.setBalance(newBalance);
+        merchantUser.setBalance(newBalance);
 
         // Add money to deposited list
         depositedMoneyOrders.put(moneyOrder.getSerialId(), new DepositedMoneyOrder(moneyOrder, identityHalveList));
 
         // Update merchant balance
-        accounts.put(merchantId, userModel);
+        accounts.put(merchantId, merchantUser);
+
+        System.out.println("[deposit] Merchant user: " + merchantUser.getUsername() + " added amount: " + moneyOrder.getAmount() + " new balance: " + newBalance);
 
         return true;
     }
@@ -311,6 +325,21 @@ public class Bank {
             return null;
         }
 
+    }
+
+    public BigInteger getUserBalance(String username, String password) {
+        if (username == null || password == null) {
+            return null;
+        }
+
+        for (BigInteger userId : accounts.keySet()) {
+            UserModel userModel = accounts.get(userId);
+            if (userModel.getUsername().equals(username) && userModel.getPassword().equals(password)) {
+                return userModel.getBalance();
+            }
+        }
+
+        return null;
     }
 
 }

@@ -3,15 +3,12 @@ package ir.ac.modares.entity;
 import ir.ac.modares.MoneyOrderHandler;
 import ir.ac.modares.model.IdentityModel;
 import ir.ac.modares.model.MoneyOrderModel;
+import ir.ac.modares.model.UserModel;
 
 import java.math.BigInteger;
 import java.util.Random;
 
 public class Consumer {
-
-    public static final BigInteger USER_ID_1 = BigInteger.valueOf(1);
-    public static final BigInteger USER_ID_2 = BigInteger.valueOf(2);
-    public static final BigInteger USER_ID_3 = BigInteger.valueOf(3);
 
     private BigInteger secretKey;
     private BigInteger inverseOfSecretKey;
@@ -22,12 +19,14 @@ public class Consumer {
     private BigInteger signedMoneyOrder;
     private int indexOfSelectedMoneyOrder;
 
+    private UserModel consumerUser;
 
-    public Consumer(String amount, BigInteger userId) {
+    public Consumer(UserModel consumerUser, String amount) {
 
+        this.consumerUser = consumerUser;
         secretKey = findGcdOne(Bank.publicKeySpec.getModulus());
         inverseOfSecretKey = secretKey.modPow(BigInteger.valueOf(-1), Bank.publicKeySpec.getModulus());
-        moneyOrderHandler = new MoneyOrderHandler(amount, userId, secretKey);
+        moneyOrderHandler = new MoneyOrderHandler(amount, consumerUser.getId(), secretKey);
     }
 
     public MoneyOrderModel getMoneyOrder() {
@@ -70,7 +69,7 @@ public class Consumer {
             this.signedMoneyOrder = signedMoneyOrderObj.getSignedMoneyOrder().multiply(inverseOfSecretKey);
 
             System.out.println("Amount: " + this.moneyOrder.getAmount());
-            System.out.println("User1 Balance: " + Bank.accounts.get(Consumer.USER_ID_1).getBalance());
+            System.out.println("User " + consumerUser.getUsername() + " New Balance: " + bank.getUserBalance(consumerUser.getUsername(), consumerUser.getPassword()));
 
         } catch (Exception e) {
             e.printStackTrace();

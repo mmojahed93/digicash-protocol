@@ -1,7 +1,7 @@
 package ir.ac.modares.entity;
 
 public enum EntityEnum {
-    USER,
+    CONSUMER,
     BANK,
     MERCHANT,
     NONE,

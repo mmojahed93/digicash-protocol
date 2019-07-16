@@ -2,6 +2,7 @@ package ir.ac.modares.entity;
 
 import ir.ac.modares.MoneyOrderHandler;
 import ir.ac.modares.model.MoneyOrderModel;
+import ir.ac.modares.model.UserModel;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import java.math.BigInteger;
@@ -13,8 +14,10 @@ public class Merchant {
     private MoneyOrderModel moneyOrderModel;
 
     private String generatedRandomBits;
+    private UserModel merchantUser;
 
-    public Merchant(BigInteger signedMoneyOrder, MoneyOrderModel moneyOrderModel) {
+    public Merchant(UserModel merchantUser, BigInteger signedMoneyOrder, MoneyOrderModel moneyOrderModel) {
+        this.merchantUser = merchantUser;
         this.signedMoneyOrder = signedMoneyOrder;
         this.moneyOrderModel = moneyOrderModel;
     }
@@ -89,8 +92,9 @@ public class Merchant {
         return true;
     }
 
-    public void spendMoneyOrder(){
+    public void spendMoneyOrder(BigInteger[] identityHalveList) {
         Bank bank = new Bank();
+        bank.deposit(merchantUser.getId(), signedMoneyOrder, moneyOrderModel, identityHalveList);
 
     }
 

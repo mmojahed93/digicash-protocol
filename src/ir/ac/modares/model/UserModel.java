@@ -10,16 +10,26 @@ public class UserModel {
     private String firstName;
     private String lastName;
     private String username;
+    private String password;
     private BigInteger balance;
     private EntityEnum userType;
 
-    public UserModel(BigInteger id, String firstName, String lastName, String username, BigInteger balance, EntityEnum userType) {
+    public UserModel(BigInteger id, String firstName, String lastName, String username, String password, BigInteger balance, EntityEnum userType) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.username = username;
+        this.password = password;
         this.balance = balance;
         this.userType = userType;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public BigInteger getId() {
