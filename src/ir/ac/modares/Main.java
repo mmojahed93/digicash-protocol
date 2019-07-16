@@ -1,7 +1,7 @@
 package ir.ac.modares;
 
+import ir.ac.modares.entity.Consumer;
 import ir.ac.modares.entity.Merchant;
-import ir.ac.modares.entity.User;
 import ir.ac.modares.model.MoneyOrderModel;
 
 import java.math.BigInteger;
@@ -10,16 +10,16 @@ public class Main {
 
     public static void main(String[] args) {
 
-        User user = new User("5000", User.USER_ID_1);
-        user.createSignedMoneyOrder();
-        BigInteger signedMoneyOrder = user.getSignedMoneyOrder();
-        MoneyOrderModel moneyOrder = user.getMoneyOrder();
+        Consumer consumer = new Consumer("5000", Consumer.USER_ID_1);
+        consumer.createSignedMoneyOrder();
+        BigInteger signedMoneyOrder = consumer.getSignedMoneyOrder();
+        MoneyOrderModel moneyOrder = consumer.getMoneyOrder();
 
         Merchant merchant = new Merchant(signedMoneyOrder, moneyOrder);
         String merchantRandomBits = merchant.getRandomBits();
 
         try {
-            BigInteger[] halves = user.getHalveXPairs(merchantRandomBits);
+            BigInteger[] halves = consumer.getHalveXPairs(merchantRandomBits);
             boolean moneyOrderCheckResult = merchant.checkMoneyOrder(halves);
             System.out.println("moneyOrderCheckResult: " + moneyOrderCheckResult);
 

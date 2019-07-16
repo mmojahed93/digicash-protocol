@@ -7,7 +7,7 @@ import ir.ac.modares.model.MoneyOrderModel;
 import java.math.BigInteger;
 import java.util.Random;
 
-public class User {
+public class Consumer {
 
     public static final BigInteger USER_ID_1 = BigInteger.valueOf(1);
     public static final BigInteger USER_ID_2 = BigInteger.valueOf(2);
@@ -23,7 +23,7 @@ public class User {
     private int indexOfSelectedMoneyOrder;
 
 
-    public User(String amount, BigInteger userId) {
+    public Consumer(String amount, BigInteger userId) {
 
         secretKey = findGcdOne(Bank.publicKeySpec.getModulus());
         inverseOfSecretKey = secretKey.modPow(BigInteger.valueOf(-1), Bank.publicKeySpec.getModulus());
@@ -70,7 +70,7 @@ public class User {
             this.signedMoneyOrder = signedMoneyOrderObj.getSignedMoneyOrder().multiply(inverseOfSecretKey);
 
             System.out.println("Amount: " + this.moneyOrder.getAmount());
-            System.out.println("User1 Balance: " + Bank.accounts.get(User.USER_ID_1).getBalance());
+            System.out.println("User1 Balance: " + Bank.accounts.get(Consumer.USER_ID_1).getBalance());
 
         } catch (Exception e) {
             e.printStackTrace();
