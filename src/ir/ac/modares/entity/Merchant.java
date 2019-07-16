@@ -26,6 +26,7 @@ public class Merchant {
 
         BigInteger designed = signedMoneyOrder.modPow(Bank.publicKeySpec.getPublicExponent(), Bank.publicKeySpec.getModulus());
         BigInteger moneyOrderDigest = new BigInteger(DigestUtils.sha256(MoneyOrderHandler.serialize(moneyOrderModel)));
+        moneyOrderDigest = moneyOrderDigest.mod(Bank.publicKeySpec.getModulus());
         return designed.equals(moneyOrderDigest);
 
     }

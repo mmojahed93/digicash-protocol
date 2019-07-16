@@ -251,7 +251,7 @@ public class Bank {
             return false;
         }
 
-        if (checkMoneyOrderSignature(signedMoneyOrder, moneyOrder)) {
+        if (!isMoneyOrderSignatureValid(signedMoneyOrder, moneyOrder)) {
             System.out.println("Signature validation failed!");
             return false;
         }
@@ -286,11 +286,12 @@ public class Bank {
         return true;
     }
 
-    private boolean checkMoneyOrderSignature(BigInteger signedMoneyOrder, MoneyOrderModel moneyOrder) {
+    private boolean isMoneyOrderSignatureValid(BigInteger signedMoneyOrder, MoneyOrderModel moneyOrder) {
 
         // Fixme check
         BigInteger designed = signedMoneyOrder.modPow(publicKeySpec.getPublicExponent(), publicKeySpec.getModulus());
         BigInteger moneyOrderDigest = new BigInteger(DigestUtils.sha256(MoneyOrderHandler.serialize(moneyOrder)));
+        moneyOrderDigest = moneyOrderDigest.mod(Bank.publicKeySpec.getModulus());
         return designed.equals(moneyOrderDigest);
 
     }

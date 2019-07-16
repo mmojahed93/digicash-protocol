@@ -65,7 +65,7 @@ public class MoneyOrderHandler {
 
             byte[] moneyOrderDigest = DigestUtils.sha256(serialize(result.moneyOrderModel));
             // Make money order blind
-            encryptedMoneyOrderList[i] = new BigInteger(moneyOrderDigest).multiply(blindFactor);
+            encryptedMoneyOrderList[i] = new BigInteger(moneyOrderDigest).multiply(blindFactor).mod(Bank.publicKeySpec.getModulus());
         }
 
     }

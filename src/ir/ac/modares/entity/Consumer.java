@@ -66,7 +66,7 @@ public class Consumer {
             this.moneyOrder = moneyOrderHandler.getMoneyOrderAt(this.indexOfSelectedMoneyOrder);
 
             // Remove blind factor (secretKey)
-            this.signedMoneyOrder = signedMoneyOrderObj.getSignedMoneyOrder().multiply(inverseOfSecretKey);
+            this.signedMoneyOrder = signedMoneyOrderObj.getSignedMoneyOrder().multiply(inverseOfSecretKey).mod(Bank.publicKeySpec.getModulus());
 
             System.out.println("Amount: " + this.moneyOrder.getAmount());
             System.out.println("User " + consumerUser.getUsername() + " New Balance: " + bank.getUserBalance(consumerUser.getUsername(), consumerUser.getPassword()));
