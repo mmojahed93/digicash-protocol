@@ -1,5 +1,7 @@
 package ir.ac.modares.model;
 
+import ir.ac.modares.entity.EntityEnum;
+
 import java.math.BigInteger;
 
 public class UserModel {
@@ -9,13 +11,15 @@ public class UserModel {
     private String lastName;
     private String username;
     private BigInteger balance;
+    private EntityEnum userType;
 
-    public UserModel(BigInteger id, String firstName, String lastName, String username, BigInteger balance) {
+    public UserModel(BigInteger id, String firstName, String lastName, String username, BigInteger balance, EntityEnum userType) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.username = username;
         this.balance = balance;
+        this.userType = userType;
     }
 
     public BigInteger getId() {
@@ -56,5 +60,13 @@ public class UserModel {
 
     public void setBalance(BigInteger balance) {
         this.balance = balance;
+    }
+
+    public EntityEnum getUserType() {
+        return userType;
+    }
+
+    public void setUserType(EntityEnum userType) {
+        this.userType = userType;
     }
 }
