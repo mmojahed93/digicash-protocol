@@ -65,9 +65,9 @@ public class Bank {
     private static KeyPair keys;
 
     static {
-        accounts.put(User.USER_ID_1, new UserModel(User.USER_ID_1, "Saber", "Eskandari", "s_eskandari", new BigInteger("1000000")));
-        accounts.put(User.USER_ID_2, new UserModel(User.USER_ID_2, "Mohammad Mahdi", "Mojahed", "mmjahed93", new BigInteger("2000000")));
-        accounts.put(User.USER_ID_3, new UserModel(User.USER_ID_3, "Ali", "Nazari", "ali_nazari", new BigInteger("3000000")));
+        accounts.put(Consumer.USER_ID_1, new UserModel(Consumer.USER_ID_1, "Saber", "Eskandari", "s_eskandari", new BigInteger("1000000"), EntityEnum.USER));
+        accounts.put(Consumer.USER_ID_2, new UserModel(Consumer.USER_ID_2, "Mohammad Mahdi", "Mojahed", "mmjahed93", new BigInteger("2000000"), EntityEnum.USER));
+        accounts.put(Consumer.USER_ID_3, new UserModel(Consumer.USER_ID_3, "Ali", "Nazari", "ali_nazari", new BigInteger("3000000"), EntityEnum.MERCHANT));
 
         initKeys();
     }
@@ -236,7 +236,7 @@ public class Bank {
     ////////////////////////////
     // Deposit merchant money
     ////////////////////////////
-    public boolean deposit(BigInteger userId, BigInteger signedMoneyOrder, MoneyOrderModel moneyOrder, BigInteger[] identityHalveList) {
+    public boolean deposit(BigInteger merchantId, BigInteger signedMoneyOrder, MoneyOrderModel moneyOrder, BigInteger[] identityHalveList) {
 
         if (checkMoneyOrderSignature(signedMoneyOrder, moneyOrder)) {
             System.out.println("Signature validation failed!");
@@ -245,12 +245,17 @@ public class Bank {
 
         String orderSerialId = moneyOrder.getSerialId();
         if (depositedMoneyOrders.containsKey(orderSerialId)) {
-            EntityEnum cheater = findCheater(moneyOrder, identityHalveList);
-            System.out.println("Money order has been spend! Cheater is: " + cheater);
+            UserModel cheater = findCheater(merchantId, moneyOrder, identityHalveList);
+            if (cheater != null) {
+                System.out.println("Money order has been spend! Cheater name: " +
+                        cheater.getFirstName() + " " + cheater.getLastName() +
+                        " username: " + cheater.getUsername());
+            }
+
             return false;
         }
 
-        UserModel userModel = accounts.get(userId);
+        UserModel userModel = accounts.get(merchantId);
         BigInteger balance = userModel.getBalance();
         if (balance.equals(BigInteger.ZERO)) {
             balance = BigInteger.valueOf(0);
@@ -262,7 +267,7 @@ public class Bank {
         depositedMoneyOrders.put(moneyOrder.getSerialId(), new DepositedMoneyOrder(moneyOrder, identityHalveList));
 
         // Update merchant balance
-        accounts.put(userId, userModel);
+        accounts.put(merchantId, userModel);
 
         return true;
     }
@@ -276,22 +281,36 @@ public class Bank {
 
     }
 
-    private EntityEnum findCheater(MoneyOrderModel newMoneyOrder, BigInteger[] newIdentityHalveList) {
+    private UserModel findCheater(BigInteger merchantId, MoneyOrderModel newMoneyOrder, BigInteger[] newIdentityHalveList) {
         DepositedMoneyOrder depositedMoneyOrder = depositedMoneyOrders.get(newMoneyOrder.getSerialId());
         if (depositedMoneyOrder == null) {
-            return EntityEnum.NONE;
+            return null;
         }
 
         BigInteger[] oldIdentityHalveList = depositedMoneyOrder.getIdentityHalveList();
 
         for (int i = 0; i < oldIdentityHalveList.length; i++) {
             if (!oldIdentityHalveList[i].equals(newIdentityHalveList[i])) {
-                // todo find user id
-                return EntityEnum.USER;
+                // Consumer is cheater, find his id
+                BigInteger cheaterId = oldIdentityHalveList[i].xor(newIdentityHalveList[i]);
+                UserModel cheaterUserModel = accounts.get(cheaterId);
+                if (cheaterUserModel != null) {
+                    return cheaterUserModel;
+                } else {
+                    System.out.println("Some problem occurred! Cheater Consumer info not found!");
+                    return null;
+                }
             }
         }
 
-        return EntityEnum.MERCHANT;
+        UserModel merchantUserModel = accounts.get(merchantId);
+        if (merchantUserModel != null) {
+            return merchantUserModel;
+        } else {
+            System.out.println("Some problem occurred! Cheater Merchant info not found!");
+            return null;
+        }
+
     }
 
 }
