@@ -34,9 +34,8 @@ public class Main {
 
         try {
             BigInteger[] halves = consumer.getHalveXPairs(merchantRandomBits);
-            boolean moneyOrderCheckResult = merchant.checkMoneyOrder(halves);
-            System.out.println("moneyOrderCheckResult: " + moneyOrderCheckResult);
-
+            boolean moneyOrderCheckResult = merchant.spendMoneyOrder(halves);
+            System.out.println("spendMoneyOrder: " + moneyOrderCheckResult);
 
         } catch (Exception e) {
             e.printStackTrace();

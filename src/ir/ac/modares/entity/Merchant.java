@@ -77,7 +77,7 @@ public class Merchant {
     }
 
 
-    public boolean checkMoneyOrder(BigInteger[] halves) throws Exception {
+    private boolean checkMoneyOrder(BigInteger[] halves) throws Exception {
         boolean isSignatureValid = checkMoneyOrderSignature();
 
         if (!isSignatureValid) {
@@ -92,9 +92,18 @@ public class Merchant {
         return true;
     }
 
-    public void spendMoneyOrder(BigInteger[] identityHalveList) {
+    public boolean spendMoneyOrder(BigInteger[] identityHalveList) {
+        try {
+            if (!checkMoneyOrder(identityHalveList)) {
+                return false;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         Bank bank = new Bank();
-        bank.deposit(merchantUser.getId(), signedMoneyOrder, moneyOrderModel, identityHalveList);
+        boolean depositResult = bank.deposit(merchantUser.getId(), signedMoneyOrder, moneyOrderModel, identityHalveList);
+        return depositResult;
 
     }
 
