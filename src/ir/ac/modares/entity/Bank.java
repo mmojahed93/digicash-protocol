@@ -64,8 +64,33 @@ public class Bank {
     private static RSAPrivateKeySpec privateKeySpec;
     private static KeyPair keys;
 
+    // Specific signature for some money order amounts
+    private static HashMap<BigInteger, KeyPair> specificSignatures = new HashMap<>();
+
     static {
+        initSpecificSignatures();
         initKeys();
+    }
+
+    private static void initSpecificSignatures() {
+        specificSignatures.put(BigInteger.valueOf(10), generateKeys());
+        specificSignatures.put(BigInteger.valueOf(100), generateKeys());
+        specificSignatures.put(BigInteger.valueOf(1000), generateKeys());
+    }
+
+    private static KeyPair generateKeys() {
+        KeyPairGenerator keyPairGenerator = null;
+        try {
+            keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+            keyPairGenerator.initialize(4096);
+
+            // Generate the KeyPair
+            return keyPairGenerator.generateKeyPair();
+
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     private static void initKeys() {
@@ -112,6 +137,7 @@ public class Bank {
     private BigInteger userId;
 
     private ArrayList<Integer> possibleIndexes;
+    private boolean useSpecificSignature = false;
 
     public Bank() {
     }
@@ -122,6 +148,10 @@ public class Bank {
 
     public void setCheckMoneyOrderDelegate(CheckMoneyDelegate checkMoneyOrderDelegate) {
         this.checkMoneyOrderDelegate = checkMoneyOrderDelegate;
+    }
+
+    public void setUseSpecificSignature(boolean useSpecificSignature) {
+        this.useSpecificSignature = useSpecificSignature;
     }
 
     ////////////////////////////
@@ -138,6 +168,14 @@ public class Bank {
         //
         if (possibleIndexes == null || possibleIndexes.size() != 1) {
             throw new Exception("Something is wrong!");
+        }
+
+        if (useSpecificSignature) {
+            KeyPair keyPair = specificSignatures.get(this.moneyOrderAmount);
+            if (keyPair == null) {
+                System.out.println("Amount is not valid!");
+                return null;
+            }
         }
 
         //
